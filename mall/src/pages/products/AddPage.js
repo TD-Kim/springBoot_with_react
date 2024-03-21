@@ -1,10 +1,11 @@
 import React from "react";
-import AddComponent from "../../components/todo/AddComponent";
+import AddComponent from "../../components/products/AddComponent";
 
 function AddPage(props) {
   return (
     <div className="p-4 w-full bg-white">
-      <div className="text-3xl font-extrabold">Todo Add Component</div>
+      <div className="text-3xl font-extrabold">Todo Add Page</div>
+
       <AddComponent />
     </div>
   );

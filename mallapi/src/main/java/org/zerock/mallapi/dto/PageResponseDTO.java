@@ -47,6 +47,10 @@ public class PageResponseDTO<E> {   // E는 특정한 DTO 를 지정할 수 있�
 
         this.nextPage = next ? end + 1 : 0;
 
+        this.totalPage = this.pageNumList.size();
+
+        this.current = pageRequestDTO.getPage();
+
     }
 
 }
