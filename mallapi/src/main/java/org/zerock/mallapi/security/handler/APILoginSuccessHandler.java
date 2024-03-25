@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.zerock.mallapi.dto.MemberDTO;
+import org.zerock.mallapi.util.JWTUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,8 +27,16 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler {   
 
         Map<String, Object> claims = memberDTO.getClaims();
 
-        claims.put("accessToken", "");
-        claims.put("refreshToken", "");
+        String accessToken = JWTUtil.generateToken(claims, 10);         // 당장 사용할 수 있는
+        String refreshToken = JWTUtil.generateToken(claims, 60 * 24);   // 만료되었을 때 교환할 수 있도록 가지고 있는 것
+
+
+        // 일반적으로 Access 토큰을 가지고 간다.(네트워크로 통신을 하는데 자주 왔다갔다 하면 보안상 좋지 않기 때문에)
+        // Access 토큰은 입장권이라고 생각하면 좋다.
+        // Access 토큰이 만료되면 그 때 refresh 토큰을 보내서 확인이 되면 다시 Access 토큰을 발급받는다.
+        // 근데 2개 모두 보내야 하냐? 이거는 케바케 어플리케이션을 어떻게 설계하느냐에 따라 다름
+        claims.put("accessToken", accessToken);
+        claims.put("refreshToken", refreshToken);
 
         // Gson을 사용하여 claims 를 json 문자열로 바꾼다.
         Gson gson = new Gson();
