@@ -5,12 +5,15 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.zerock.mallapi.security.handler.APILoginFailHandler;
+import org.zerock.mallapi.security.handler.APILoginSuccessHandler;
 
 import java.util.Arrays;
 
@@ -28,12 +31,19 @@ public class CustomSecurityConfig {
             httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource());
         });
 
+        // api 서버는 기본적으로 무상태. 상태를 유지하면 안된다. 상태를 유지하지 않은 상태에서 서비스를 하려면 내부적으로 세션을 가능하면 안만들어야 한다.
+        http.sessionManagement(httpSecuritySessionManagementConfigurer -> {
+            httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.NEVER); // 세션을 안만들고 쓸거란 얘기
+        });
+
         http.csrf(httpSecurityCsrfConfigurer -> {
             httpSecurityCsrfConfigurer.disable();
         });
 
         http.formLogin(config -> {
             config.loginPage("/api/member/login");
+            config.successHandler(new APILoginSuccessHandler());
+            config.failureHandler(new APILoginFailHandler());
         });
 
         return http.build();
