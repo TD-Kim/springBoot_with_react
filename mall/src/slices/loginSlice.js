@@ -1,9 +1,15 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { loginPost } from "../api/memberApi";
+import { getCookie, removeCookie, setCookie } from "../util/cookieUtil";
 
 // 유지해야 하는 값
-const iniState = {
+const initState = {
   email: "",
+};
+
+const loadMemberCookie = () => {
+  const memberInfo = getCookie("member");
+  return memberInfo;
 };
 
 export const loginPostAsync = createAsyncThunk("loginPostAsync", (param) =>
@@ -12,7 +18,7 @@ export const loginPostAsync = createAsyncThunk("loginPostAsync", (param) =>
 
 const loginSlice = createSlice({
   name: "loginSlice",
-  initialState: iniState,
+  initialState: loadMemberCookie() || initState,
   reducers: {
     login: (state, action) => {
       // 리듀서 함수의 파라미터는 두개밖에 못받음.
@@ -23,7 +29,8 @@ const loginSlice = createSlice({
     },
     logout: () => {
       console.log("logout...........");
-      return { ...iniState };
+      removeCookie("member");
+      return { ...initState };
     },
   },
   // extraReducers 프로퍼티를 사용하는 경우는 이미 다른 곳에서 정의된 액션생성함수를 사용할때인데,
@@ -34,6 +41,9 @@ const loginSlice = createSlice({
       .addCase(loginPostAsync.fulfilled, (state, action) => {
         console.log("fulfilled");
         const payload = action.payload;
+        if (!payload.error) {
+          setCookie("member", JSON.stringify(payload));
+        }
         return payload;
       })
       .addCase(loginPostAsync.pending, (state, action) => {

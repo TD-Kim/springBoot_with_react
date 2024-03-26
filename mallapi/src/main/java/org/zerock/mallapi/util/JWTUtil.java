@@ -23,7 +23,7 @@ public class JWTUtil {
         }
 
         String jwtStr = Jwts.builder()
-                .setHeader(Map.of("type", "JWT"))
+                .setHeader(Map.of("typ", "JWT"))
                 .setClaims(valueMap)
                 .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
                 .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(min).toInstant()))

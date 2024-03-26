@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login, loginPostAsync } from "../../slices/loginSlice";
+import { useNavigate } from "react-router-dom";
+import useCustomLogin from "../../hooks/useCustomLogin";
+import KakaoLoginComponent from "./KakaoLoginComponent";
 
 const initState = {
   email: "",
@@ -10,7 +13,11 @@ const initState = {
 function LoginComponent(props) {
   const [loginParam, setLoginParam] = useState({ ...initState });
 
-  const dispatch = useDispatch(); // dispatch는 뿌린다, 배포하다 라는 뜻
+  // const dispatch = useDispatch(); // dispatch는 뿌린다, 배포하다 라는 뜻
+
+  // const navigate = useNavigate();
+
+  const { doLogin, moveToPath } = useCustomLogin();
 
   const handleChange = (e) => {
     loginParam[e.target.name] = e.target.value;
@@ -20,7 +27,26 @@ function LoginComponent(props) {
 
   const handleClickLogin = (e) => {
     // dispatch(login(loginParam)); // 리듀서를 호출한 결과를 dispatch 한다.
-    dispatch(loginPostAsync(loginParam));
+
+    // 비동기 통신할 때 unwrap 사용(디버깅 용도로 가끔 사용) 근데 그냥 then 써서 data에서 payload 뽑으면 결과 똑같음
+    // dispatch(loginPostAsync(loginParam))
+    //   .unwrap()
+    //   .then((data) => {
+    //     if (data.error) {
+    //       alert("이메일과 패스워드를 확인해 주세요");
+    //     } else {
+    //       alert("로그인 성공");
+    //       navigate({ pathname: "/" }, { replace: true });
+    //     }
+    //   });
+
+    doLogin(loginParam).then((data) => {
+      if (data.error) {
+        alert("이메일과 패스워드를 확인해 주세요.");
+      } else {
+        moveToPath("/");
+      }
+    });
   };
 
   return (
@@ -66,6 +92,7 @@ function LoginComponent(props) {
           </div>
         </div>
       </div>
+      <KakaoLoginComponent />
     </div>
   );
 }

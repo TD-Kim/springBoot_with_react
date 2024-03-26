@@ -1,12 +1,18 @@
 import React from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "../../slices/loginSlice";
+import useCustomLogin from "../../hooks/useCustomLogin";
 
 function LogoutComponent(props) {
   const dispatch = useDispatch();
 
+  const { doLogout, moveToPath } = useCustomLogin();
+
   const handleClickLogout = () => {
-    dispatch(logout());
+    // dispatch(logout());
+    doLogout();
+    alert("로그아웃 되었습니다.");
+    moveToPath("/");
   };
 
   return (
