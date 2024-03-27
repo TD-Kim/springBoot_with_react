@@ -24,6 +24,9 @@ public class Member {
 
     private String nickname;
 
+    // Boolean 타입은 null 값을 허용하고 boolean 타입은 null을 가질 수 없다.
+    // Boolean 으로 만들면 롬복에 의해 생성되는 getter, setter 메소드는 getXXX 로 메소드명이 명명되지만,
+    // boolean 으롬 만들면 메소드명은 isXXX 가 된다.
     private boolean social;
 
     @ElementCollection(fetch = FetchType.LAZY)

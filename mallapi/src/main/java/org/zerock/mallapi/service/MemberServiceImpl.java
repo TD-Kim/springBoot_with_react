@@ -6,17 +6,19 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.zerock.mallapi.domain.Member;
+import org.zerock.mallapi.domain.MemberRole;
 import org.zerock.mallapi.dto.MemberDTO;
+import org.zerock.mallapi.dto.MemberModifyDTO;
 import org.zerock.mallapi.repository.MemberRepository;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,18 +27,67 @@ public class MemberServiceImpl implements MemberService{
 
     private final MemberRepository memberRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     public MemberDTO getKakaoMember(String accessToken) {
 
         // accessToken 을 이용해서 사용자 정보 가져오기
-        getEmailFromKakaoAccessToken(accessToken);
+        String nickname = getEmailFromKakaoAccessToken(accessToken);
 
         // 기존 DB에 회원 정보가 있는 경우 or 없는 경우 처리
+        Optional<Member> result = memberRepository.findById(nickname);
 
-        return null;
+        if(result.isPresent()) {
+            MemberDTO memberDTO = entityToDTO(result.get());
+
+            log.info("existed........................" + memberDTO);
+
+            return memberDTO;
+        }
+
+        Member socialMember = makeSocialMember(nickname);
+
+        memberRepository.save(socialMember);
+
+        MemberDTO memberDTO = entityToDTO(socialMember);
+
+        return memberDTO;
     }
 
-    private void getEmailFromKakaoAccessToken(String accessToken) {
+    @Override
+    public void modifyMember(MemberModifyDTO memberModifyDTO) {
+        Optional<Member> result = memberRepository.findById(memberModifyDTO.getEmail());
+
+        Member member = result.orElseThrow();
+
+        log.info("Modified pw ---------------------" + memberModifyDTO.getPw());
+
+        member.changeNickname(memberModifyDTO.getNickname());
+        member.changeSocial(false);
+        member.changePw(passwordEncoder.encode(memberModifyDTO.getPw()));
+
+        memberRepository.save(member);
+    }
+
+    private Member makeSocialMember(String email){
+        String tempPassword = makeTempPassword();
+
+        log.info("tempPassword: " + tempPassword);
+
+        Member member = Member.builder()
+                .email(email)
+                .pw(passwordEncoder.encode(tempPassword))
+                .nickname("Social Member")
+                .social(true)
+                .build();
+
+        member.addRole(MemberRole.USER);
+
+        return member;
+    }
+
+    private String getEmailFromKakaoAccessToken(String accessToken) {
 
         String kakaoGetUserURL = "https://kapi.kakao.com/v2/user/me";
 
@@ -67,14 +118,16 @@ public class MemberServiceImpl implements MemberService{
 
         log.info("nickname: " + nickname);
 
-        try {
-            nickname = URLEncoder.encode(nickname, "euc-kr");
-            log.info("encoded nickname: " + nickname);
-            nickname = URLDecoder.decode(nickname, "utf-8");
-            log.info("decoded nickname: " + nickname);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return nickname;
 
+    }
+
+    private String makeTempPassword() {
+        StringBuffer buffer = new StringBuffer();
+
+        for(int i = 0; i < 10; i++) {
+            buffer.append((char) ((int) (Math.random() * 55) * 65));
+        }
+        return buffer.toString();
     }
 }

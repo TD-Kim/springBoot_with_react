@@ -25,7 +25,11 @@ const loginSlice = createSlice({
       console.log("loginParam", action);
       console.log(action.payload);
       console.log("----------------");
-      return { email: action.payload.email }; // 리턴값은 다음의 값을 이렇게 유지해줘. 원하는 다음 next 결과값. useSelector 에서 받는다.
+
+      setCookie("member", JSON.stringify(action.payload), 1);
+
+      // return { email: action.payload.email }; // 리턴값은 다음의 값을 이렇게 유지해줘. 원하는 다음 next 결과값. useSelector 에서 받는다.
+      return action.payload; // 리턴값은 다음의 값을 이렇게 유지해줘. 원하는 다음 next 결과값. useSelector 에서 받는다.
     },
     logout: () => {
       console.log("logout...........");
