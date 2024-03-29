@@ -3,6 +3,7 @@ import useCustomMove from "../../hooks/useCustomMove";
 import { API_SERVER_HOST, getList } from "../../api/productsApi";
 import FetchingModal from "../common/FetchingModal";
 import PageComponent from "../common/PageComponent";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const initState = {
   dtoList: [],
@@ -20,23 +21,41 @@ const initState = {
 const host = API_SERVER_HOST;
 
 function ListComponent(props) {
-  const [serverData, setServerData] = useState(initState);
-  const [fetching, setFetching] = useState(false);
+  // const [serverData, setServerData] = useState(initState);
+  // const [fetching, setFetching] = useState(false);
 
   const { moveToList, moveToRead, page, size, refresh } = useCustomMove();
 
-  useEffect(() => {
-    setFetching(true);
+  // useEffect(() => {
+  //   setFetching(true);
 
-    getList({ page, size }).then((data) => {
-      setServerData(data);
-      setFetching(false);
-    });
-  }, [page, size, refresh]);
+  //   getList({ page, size }).then((data) => {
+  //     setServerData(data);
+  //     setFetching(false);
+  //   });
+  // }, [page, size, refresh]);
+
+  const { data, isFetching, error, isError } = useQuery({
+    // queryKey: ["products/list", { page, size }],
+    queryKey: ["products/list", { page, size, refresh }],
+    queryFn: () => getList({ page, size }),
+    staleTime: 1000 * 10,
+  });
+
+  // const queryClient = useQueryClient();
+
+  const handleClickPage = (pageParam) => {
+    // if (pageParam.page === parseInt(page))
+    //   queryClient.invalidateQueries("products/list"); // 무효화 시켜라
+    moveToList(pageParam);
+  };
+
+  const serverData = data || initState;
 
   return (
     <div className="border-2 border-blue-100 mt-10 mr-2 ml-2">
-      {fetching ? <FetchingModal /> : <></>}
+      {/* {fetching ? <FetchingModal /> : <></>} */}
+      {isFetching ? <FetchingModal /> : <></>}
 
       <div className="flex flex-wrap mx-auto p-6">
         {serverData.dtoList.map((product) => (
@@ -70,7 +89,8 @@ function ListComponent(props) {
 
       <PageComponent
         serverData={serverData}
-        movePage={moveToList}
+        // movePage={moveToList}
+        movePage={handleClickPage}
       ></PageComponent>
     </div>
   );

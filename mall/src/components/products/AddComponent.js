@@ -3,6 +3,7 @@ import ResultModal from "../common/ResultModal";
 import { postAdd } from "../../api/productsApi";
 import FetchingModal from "../common/FetchingModal";
 import useCustomMove from "../../hooks/useCustomMove";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const initState = {
   pname: "",
@@ -15,14 +16,16 @@ const initState = {
 
 function AddComponent(props) {
   const [product, setProduct] = useState(initState);
-  const [fetching, setFetching] = useState(false);
-  const [result, setResult] = useState(false);
+  // const [fetching, setFetching] = useState(false);
+  // const [result, setResult] = useState(false);
 
   const { moveToList } = useCustomMove();
 
   const uploadRef = useRef(); // dom 엘리먼트를 식별하는 용도로 useRef 를 사용한다.
 
-  // multipart/form-data FormData()
+  const addMutation = useMutation({
+    mutationFn: (product) => postAdd(product),
+  });
 
   const handleChangeProduct = (e) => {
     product[e.target.name] = e.target.value;
@@ -43,27 +46,42 @@ function AddComponent(props) {
 
     console.log(formData);
 
-    setFetching(true);
+    // setFetching(true);
 
-    postAdd(formData).then((data) => {
-      setFetching(false);
-      setResult(data.result);
-    });
+    // postAdd(formData).then((data) => {
+    //   setFetching(false);
+    //   setResult(data.result);
+    // });
+
+    addMutation.mutate(formData);
   };
 
+  const queryClient = useQueryClient();
+
   const closeModal = () => {
-    setResult(null);
+    // setResult(null);
+    queryClient.invalidateQueries("products/list");
     moveToList({ page: 1 });
   };
 
   return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
-      {fetching ? <FetchingModal /> : <></>}
+      {/* {fetching ? <FetchingModal /> : <></>} */}
+      {addMutation.isPending ? <FetchingModal /> : <></>}
 
-      {result ? (
+      {/* {result ? (
         <ResultModal
           title={"Product Add Result"}
           content={`${result}번 등록 완료`}
+          callbackFn={closeModal}
+        />
+      ) : (
+        <></>
+      )} */}
+      {addMutation.isSuccess ? (
+        <ResultModal
+          title={"Product Add Result"}
+          content={`${addMutation.data.result}번 등록 완료`}
           callbackFn={closeModal}
         />
       ) : (

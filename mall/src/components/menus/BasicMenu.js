@@ -1,21 +1,25 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../../slices/loginSlice";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 function BasicMenu() {
-  const loginState = useSelector((state) => state.loginSlice); // 어느 컴포넌트든 useSelect 를 쓰면 state 가 바뀌는것을 알 수 있다.
+  // const loginState = useSelector((state) => state.loginSlice); // 어느 컴포넌트든 useSelect 를 쓰면 state 가 바뀌는것을 알 수 있다.
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const { doLogout, moveToPath } = useCustomLogin();
+
+  const navigate = useNavigate();
 
   const handleTest = () => {
     doLogout();
     alert("로그아웃 되었습니다.");
     moveToPath("/");
   };
+
+  const { loginState } = useCustomLogin();
 
   console.log("loginState.......");
 

@@ -8,6 +8,7 @@ import {
 import FetchingModal from "../common/FetchingModal";
 import ResultModal from "../common/ResultModal";
 import useCustomMove from "../../hooks/useCustomMove";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const initState = {
   pno: 0,
@@ -29,14 +30,31 @@ function ModifyComponent({ pno }) {
 
   const uploadRef = useRef();
 
-  useEffect(() => {
-    setFetching(true);
+  const delMutation = useMutation({ mutationFn: (pno) => deleteOne(pno) });
+  const modMutation = useMutation({
+    mutationFn: (product) => putOne(pno, product),
+  });
 
-    getOne(pno).then((data) => {
-      setProduct(data);
-      setFetching(false);
-    });
-  }, []);
+  // useEffect(() => {
+  //   setFetching(true);
+
+  //   getOne(pno).then((data) => {
+  //     setProduct(data);
+  //     setFetching(false);
+  //   });
+  // }, []);
+
+  const query = useQuery({
+    queryKey: ["products", pno],
+    queryFn: () => getOne(pno),
+    staleTime: 1000 * 10,
+  });
+
+  useEffect(() => {
+    if (query.isSuccess) {
+      setProduct(query.data);
+    }
+  }, [pno, query.data, query.isSuccess]);
 
   const handleChangeProduct = (e) => {
     product[e.target.name] = e.target.value;
@@ -61,27 +79,44 @@ function ModifyComponent({ pno }) {
 
     setFetching(true);
 
-    putOne(pno, formData).then((data) => {
-      setResult("Modified");
-      setFetching(false);
-    });
+    // putOne(pno, formData).then((data) => {
+    //   setResult("Modified");
+    //   setFetching(false);
+    // });
+
+    modMutation.mutate(formData);
   };
 
   const handleClickDelete = () => {
-    setFetching(true);
-    deleteOne(pno).then((data) => {
-      setResult("Deleted");
-      setFetching(false);
-    });
+    // setFetching(true);
+    // deleteOne(pno).then((data) => {
+    //   setResult("Deleted");
+    //   setFetching(false);
+    // });
+
+    delMutation.mutate(pno);
   };
 
+  const queryClient = useQueryClient();
+
   const closeModal = () => {
-    if (result === "Modified") {
-      moveToRead(pno);
-    } else if (result === "Deleted") {
-      moveToList({ page: 1 });
+    // if (result === "Modified") {
+    //   moveToRead(pno);
+    // } else if (result === "Deleted") {
+    //   moveToList({ page: 1 });
+    // }
+    // setResult(null);
+
+    queryClient.invalidateQueries(["products", pno]);
+    queryClient.invalidateQueries("products/list");
+
+    if (delMutation.isSuccess) {
+      moveToList();
     }
-    setResult(null);
+
+    if (modMutation.isSuccess) {
+      moveToRead(pno);
+    }
   };
 
   const deleteOldImages = (imageName) => {
@@ -95,11 +130,25 @@ function ModifyComponent({ pno }) {
 
   return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
-      {fetching ? <FetchingModal /> : <></>}
+      {/* {fetching ? <FetchingModal /> : <></>} */}
+      {query.isFetching || delMutation.isPending || modMutation.isPending ? (
+        <FetchingModal />
+      ) : (
+        <></>
+      )}
 
-      {result ? (
+      {/* {result ? (
         <ResultModal
           title={`${result}`}
+          content={"정상적으로 처리되었습니다."} //결과 모달창
+          callbackFn={closeModal}
+        />
+      ) : (
+        <></>
+      )} */}
+      {delMutation.isSuccess || modMutation.isSuccess ? (
+        <ResultModal
+          title={`처리결과`}
           content={"정상적으로 처리되었습니다."} //결과 모달창
           callbackFn={closeModal}
         />

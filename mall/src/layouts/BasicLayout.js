@@ -1,5 +1,6 @@
 import React from "react";
 import BasicMenu from "../components/menus/BasicMenu";
+import CartComponent from "../components/menus/CartComponent";
 
 // children props 를 사용하여 화면의 전체 구성을 잡는 컴포넌트
 function BasicLayout({ children }) {
@@ -26,7 +27,8 @@ function BasicLayout({ children }) {
           {children}
         </main>
         <aside className="bg-green-300 md:w-1/5 lg:w-1/4 px-5 flex py-5">
-          <h1 className="text-2xl md:text-4xl">Sidebar</h1>
+          {/* <h1 className="text-2xl md:text-4xl">Sidebar</h1> */}
+          <CartComponent />
         </aside>
       </div>
     </>
